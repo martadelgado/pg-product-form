@@ -1,0 +1,31 @@
+.container > .row {
+  margin-top: 16px;
+}
+
+.container textarea {
+  resize: none;
+}
+
+.product-row {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.product-row [class^="col-"] {
+  margin-bottom: 16px;
+}
+
+@media only screen and (max-width: 767px) {
+  .button-delete {
+    align-content: center;
+    margin-top: 12px;
+  }
+
+  .product-row {
+    border: 1px solid #eee;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    width: inherit;
+  }
+}
