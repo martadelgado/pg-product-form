@@ -29,6 +29,11 @@ function OrderForm() {
   const [isDisabled, setIsDisabled] = useState(true);
   const [posOptions, setPosOptions] = useState(null);
 
+  // centralize if needed
+  const roundedNumber = (number) => {
+    return Math.round(number * 100) / 100;
+  };
+
   // set dropdown value and form data value based on pos selected
   const handlePosChange = (posSelected) => {
     setSelectedPos(posSelected);
@@ -81,7 +86,7 @@ function OrderForm() {
 
       return {
         ...updatedFormData,
-        totalAmount: parseFloat(totalSum.toFixed(2)),
+        totalAmount: roundedNumber(totalSum),
       };
     });
   };

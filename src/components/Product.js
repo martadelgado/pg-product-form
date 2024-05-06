@@ -21,6 +21,10 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
     total: "",
   });
 
+  const roundedNumber = (number) => {
+    return Math.round(number * 100) / 100;
+  };
+
   // API call to populate items dropdown
   useEffect(() => {
     const fetchItems = async () => {
@@ -57,32 +61,34 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
     const { name, value } = event.target;
 
     if (name === "qty") {
-      setFormData((prevFormData) => {
-        const updatedFormData = {
-          ...prevFormData,
-          [name]: value,
-          total: value * prevFormData.price,
-        };
-        onFormDataChange(updatedFormData, index);
-        return updatedFormData;
-      });
+      /^\d*(\.\d{0,2})?$/.test(value) &&
+        setFormData((prevFormData) => {
+          const updatedFormData = {
+            ...prevFormData,
+            [name]: value,
+            total: roundedNumber(value * prevFormData.price),
+          };
+          onFormDataChange(updatedFormData, index);
+          return updatedFormData;
+        });
     }
 
     if (name === "discount") {
-      setFormData((prevFormData) => {
-        const totalWithDiscount =
-          value > 0
-            ? prevFormData.total * (1 - value / 100)
-            : prevFormData.qty * prevFormData.price;
+      // regex to only accept positive integers rounded to two decimal places
+      /^\d*\.?\d{0,2}$|^$/.test(value) &&
+        setFormData((prevFormData) => {
+          const total = prevFormData.price * prevFormData.qty;
+          const totalWithDiscount =
+            value > 0 ? total - (total * value) / 100 : total;
 
-        const updatedFormData = {
-          ...prevFormData,
-          [name]: value,
-          total: parseFloat(totalWithDiscount.toFixed(2)),
-        };
-        onFormDataChange(updatedFormData, index);
-        return updatedFormData;
-      });
+          const updatedFormData = {
+            ...prevFormData,
+            [name]: value,
+            total: roundedNumber(totalWithDiscount),
+          };
+          onFormDataChange(updatedFormData, index);
+          return updatedFormData;
+        });
     }
   };
 
