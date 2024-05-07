@@ -18,6 +18,7 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
     qty: "",
     price: "",
     discount: "",
+    discounts: "",
     total: "",
   });
 
@@ -43,6 +44,7 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
             value: result.text,
             price: result.basePrice,
             ean: result.id,
+            discounts: result.prices,
           });
         });
         setItems(items);
@@ -54,6 +56,31 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
     fetchItems();
   }, []);
 
+  // retrieve discount from range of discounts based on quantity
+  const getDiscount = (quantity, discounts) => {
+    for (const discount of discounts) {
+      if (
+        quantity >= discount.minQty &&
+        (discount.maxQty === null || quantity <= discount.maxQty)
+      ) {
+        return discount.discount;
+      }
+    }
+    return 0;
+  };
+
+  const calculateDiscount = (discountsArr, quantity, discount) => {
+    return discountsArr.length ? getDiscount(quantity, discountsArr) : discount;
+  };
+
+  const calculateTotal = (price, quantity) => {
+    return price * quantity;
+  };
+
+  const calculateTotalWithDiscount = (discount, total) => {
+    return discount > 0 ? total - (total * discount) / 100 : total;
+  };
+
   /* when quantity is updated, total price is updated
    * when discount is updated, percentage is calculated and subtracted from total
    */
@@ -61,12 +88,21 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
     const { name, value } = event.target;
 
     if (name === "qty") {
+      // regex to accept positive integers
       /^\d*(\.\d{0,2})?$/.test(value) &&
         setFormData((prevFormData) => {
+          const discount = calculateDiscount(
+            prevFormData.discounts,
+            value,
+            prevFormData.discount
+          );
+          const total = calculateTotal(prevFormData.price, value);
+          const totalWithDiscount = calculateTotalWithDiscount(discount, total);
           const updatedFormData = {
             ...prevFormData,
             [name]: value,
-            total: roundedNumber(value * prevFormData.price),
+            discount: discount,
+            total: roundedNumber(totalWithDiscount),
           };
           onFormDataChange(updatedFormData, index);
           return updatedFormData;
@@ -77,10 +113,9 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
       // regex to only accept positive integers rounded to two decimal places
       /^\d*\.?\d{0,2}$|^$/.test(value) &&
         setFormData((prevFormData) => {
-          const total = prevFormData.price * prevFormData.qty;
-          const totalWithDiscount =
-            value > 0 ? total - (total * value) / 100 : total;
+          const total = calculateTotal(prevFormData.price, prevFormData.qty);
 
+          const totalWithDiscount = calculateTotalWithDiscount(value, total);
           const updatedFormData = {
             ...prevFormData,
             [name]: value,
@@ -94,15 +129,23 @@ function Product({ index, onFormDataChange, onDeleteProduct }) {
 
   // sets form data values upon item selection
   const handleItemChange = (itemSelected) => {
+    const defaultQty = 1;
+    const discount = calculateDiscount(itemSelected.discounts, defaultQty, 0);
     setSelectedOption(itemSelected);
+
+    const total = calculateTotal(itemSelected.price, defaultQty);
+    const totalWithDiscount = calculateTotalWithDiscount(discount, total);
+
     setFormData((prevFormData) => {
       const updatedFormData = {
         ...prevFormData,
+        discounts: itemSelected.discounts,
+        discount: discount,
         item: itemSelected.value,
-        qty: 1,
+        qty: defaultQty,
         price: itemSelected.price,
         ean: itemSelected.ean,
-        total: itemSelected.price,
+        total: roundedNumber(totalWithDiscount),
       };
       onFormDataChange(updatedFormData, index);
       return updatedFormData;

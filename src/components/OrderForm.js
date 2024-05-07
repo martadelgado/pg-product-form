@@ -108,6 +108,12 @@ function OrderForm() {
   // delete product component on button click
   const handleDeleteProduct = (index) => {
     const newProducts = [...products];
+    formData.products.splice(index, 1);
+    const totalSum = formData.products.reduce(
+      (acc, product) => acc + product.total,
+      0
+    );
+    setFormData({ ...formData, totalAmount: roundedNumber(totalSum) });
     newProducts.splice(index, 1);
     setProducts(newProducts);
   };
